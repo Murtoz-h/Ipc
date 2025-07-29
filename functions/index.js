@@ -44,6 +44,7 @@ oAuth2Client.setCredentials({ refresh_token: REFRESH_TOKEN });
 async function sendMail(mailOptions) {
   try {
     const accessToken = await oAuth2Client.getAccessToken();
+    
 
     const transporter = nodemailer.createTransport({
       service: 'gmail',
@@ -67,7 +68,7 @@ async function sendMail(mailOptions) {
     console.log("Mail options:", JSON.stringify(mailOptions));
     var localoptions = {
         from: 'IPC Web <web@indianipc.agency>',
-        to: "admin@indianipc.agency" ,
+        to: "admin@indianipc.agency" ,        
         subject: mailOptions.subject,
         text: mailOptions.text,
     }
@@ -82,6 +83,24 @@ async function sendMail(mailOptions) {
 exports.sendMail2=onRequest((req,res)=>cors(req, res, () => {
     JSON.stringify(req.body);
 logger.info("Received request to send email", { structuredData: true });
+// Check if the request method is POST
+if (req.method !== 'POST') {
+    logger.error("Method Not Allowed", { structuredData: true });
+    return res.status(405).send('Method Not Allowed');
+}
+// Check if the request body is empty
+if (!req.body || Object.keys(req.body).length === 0) {
+    logger.error("Bad Request: No data provided", { structuredData: true });
+    return res.status(400).send('Bad Request: No data provided');
+}
+// Process the request body
+const { subject, text } = req.body;
+// Validate email fields
+if (!subject || !text) {
+    logger.error("Bad Request: Missing required fields", { structuredData: true });
+    return res.status(400).send('Bad Request: Missing required fields');
+}
+
     sendMail(req.body);
 res.status(200).send('Email sent successfully');
 logger.info("Email sent successfully", { structuredData: true });
